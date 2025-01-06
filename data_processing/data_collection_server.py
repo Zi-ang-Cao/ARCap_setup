@@ -2,21 +2,26 @@ import socket
 import time
 from argparse import ArgumentParser
 import numpy as np
-from scipy.spatial.transform import Rotation
+from scipy.spatial.transform import Rotation as R
 import pybullet as pb
 from rigidbodySento import create_primitive_shape
 from ip_config import *
 from rokoko_module import RokokoModule
-from realsense_module import DepthCameraModule
+USE_ZED = True
+if USE_ZED:
+    from zed_module import ZEDCameraModule
+else:
+    from realsense_module import DepthCameraModule
 from quest_robot_module import QuestRightArmLeapModule, QuestLeftArmGripperModule
+import os
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--frequency", type=int, default=30)
-    parser.add_argument("--handedness", type=str, default="right")
+    parser.add_argument("--handedness", type=str, default="left")
     parser.add_argument("--no_camera", action="store_true", default=False)
     args = parser.parse_args()
-    if not os.path.isdir("data")
+    if not os.path.isdir("data"):
         os.mkdir("data")
     
     c = pb.connect(pb.DIRECT)
@@ -25,7 +30,10 @@ if __name__ == "__main__":
     for i in range(4):
         vis_sp.append(create_primitive_shape(pb, 0.1, pb.GEOM_SPHERE, [0.02], color=c_code[i]))
     if not args.no_camera:
-        camera = DepthCameraModule(is_decimate=False, visualize=False)
+        if USE_ZED:
+            camera = ZEDCameraModule(is_decimate=False, visualize=False)
+        else:
+            camera = DepthCameraModule(is_decimate=False, visualize=False)
     rokoko = RokokoModule(VR_HOST, HAND_INFO_PORT, ROKOKO_PORT)
     if args.handedness == "right":
         quest = QuestRightArmLeapModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=None)
@@ -36,25 +44,29 @@ if __name__ == "__main__":
     fps_counter = 0
     packet_counter = 0
     print("Initialization completed")
+    # import pdb; pdb.set_trace()
     current_ts = time.time()
-    while True:
+    running = True
+    while running:
         now = time.time()
         # TODO: May cause communication issues, need to tune on AR side.
         if now - current_ts < 1 / args.frequency: 
             continue
         else:
             current_ts = now
+        
         try:
             if not args.no_camera:
                 point_cloud = camera.receive()
             left_positions, right_positions = rokoko.receive()
             rokoko.send_joint_data(np.vstack([left_positions[:5], right_positions[:5]]))
+            # Cause waiting for the next frame
             wrist, head_pose= quest.receive()
             if wrist is not None:
-                wrist_orn = Rotation.from_quat(wrist[1])
+                wrist_orn = R.from_quat(wrist[1])
                 wrist_pos = wrist[0]
                 head_pos = head_pose[0]
-                head_orn = Rotation.from_quat(head_pose[1])
+                head_orn = R.from_quat(head_pose[1])
                 if args.handedness == "right":
                     hand_tip_pose = wrist_orn.apply(right_positions) + wrist_pos
                 else:
@@ -79,10 +91,10 @@ if __name__ == "__main__":
             print(e)
             pass
         except KeyboardInterrupt:
-            if not args.no_camera:
-                camera.close()
-            rokoko.close()
-            quest.close()
+            # if not args.no_camera:
+            #     camera.close()
+            # rokoko.close()
+            running = False
             break
         else:
             packet_time = time.time()

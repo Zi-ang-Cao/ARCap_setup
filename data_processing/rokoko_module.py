@@ -133,7 +133,7 @@ if __name__ == "__main__":
     while True:
         left_positions, right_positions = rokoko.receive()
         left_positions, right_positions = rokoko.adjust_bone_length(left_positions, right_positions, scale)
-        rokoko.visualize_hand([], right_positions)
+        rokoko.visualize_hand([], left_positions)
         #rokoko.send_joint_data(np.vstack([left_positions, right_positions]))
         cnt += 1
         if cnt % 30 == 0:

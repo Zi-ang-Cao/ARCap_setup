@@ -304,7 +304,14 @@ class QuestLeftArmGripperModule(QuestRobotModule):
         index_pos = fingertip_pos[0]
         middle_pos = fingertip_pos[1]
         distance = 0.5*np.linalg.norm(thumb_pos - index_pos)+0.5*np.linalg.norm(thumb_pos - middle_pos)
-        midpoint_pos = (2*thumb_pos + index_pos + index_pos)/4
+
+        # NOTE: use the following lines to compute the end-effector pose from rokoko fingertip
+        ## OPENTION 1: use the middle point of the triangle formed by the three fingertips
+        # midpoint_pos = (2*thumb_pos + index_pos + middle_pos)/4
+
+        # OPTION 2: use the 1/3 point of from the thumb to the middle&index fingertip
+        # midpoint_pos = (4*thumb_pos + index_pos + middle_pos)/6
+        midpoint_pos = (14*thumb_pos + index_pos + middle_pos)/16
         return np.array([distance/2, distance/2]), midpoint_pos
 
     def solve_system_world(self, wrist_pos, wrist_orn, tip_poses):

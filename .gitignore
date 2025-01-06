@@ -9,3 +9,5 @@ data_processing/dexcap_data/
 data_processing/data_processed/
 data_processing/trajs/
 **/__pycache__/
+
+.DS_Store
