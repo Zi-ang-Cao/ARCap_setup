@@ -137,7 +137,7 @@ def process_wrist_pos(wrist_pos, wrist_orn):
 def read_data(path, target_path, delta_orn, delta_pos, stride):
     files = os.listdir(path)
     # Sort files by time stamp right_data_{time.time()}.npz
-    files.sort(key=lambda x: float(x.split("_")[2].split(".")[0]))
+    files.sort(key=lambda x: float(x.split("_")[2].split(".npz")[0]))
     bb_lb = np.array([-0.05, -0.2, -0.05])
     bb_ub = np.array([0.05, 0.05, 0.1])
     init_center = (bb_lb + bb_ub) / 2
