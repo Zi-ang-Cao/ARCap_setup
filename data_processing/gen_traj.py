@@ -1,3 +1,7 @@
+"""
+python gen_traj.py --root 2025-01-07-16-06-40 --exp_name replay_no_glove_left_hand_to_verify_offset
+"""
+
 import numpy as np
 import os
 from scipy.spatial.transform import Rotation
@@ -68,6 +72,7 @@ if args.file is None:
     #files.remove("RobotFrame.npy")
     for i,file in enumerate(files):
         wrist_poses, wrist_orns, hand_qs, arm_qs = load_traj(f"data/{args.root}/{file}")
+        os.makedirs("trajs", exist_ok=True)
         np.savez(f"trajs/arcap_{args.exp_name}_{i}.npz", wrist_poses=wrist_poses, wrist_orns=wrist_orns, arm_qs = arm_qs, hand_qs=hand_qs)
 else:
     wrist_poses, wrist_orns, hand_qs, arm_qs = load_traj(f"data/{args.root}/{args.file}")

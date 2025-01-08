@@ -7,12 +7,14 @@ import pybullet as pb
 from rigidbodySento import create_primitive_shape
 from ip_config import *
 from realsense_module import DepthCameraModule
-from quest_robot_module import QuestRightArmLeapModule, QuestLeftArmGripperNoRokokoModule
+from quest_robot_module import QuestLeftArmGripperNoRokokoModule
+import os
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--frequency", type=int, default=30)
     parser.add_argument("--handedness", type=str, default="left")
+    parser.add_argument("--exp_name", type=str, default="debug_left_wrist_offset_Jan7")
     parser.add_argument("--no_camera", action="store_true", default=False)
     args = parser.parse_args()
     c = pb.connect(pb.DIRECT)
@@ -24,9 +26,13 @@ if __name__ == "__main__":
         camera = DepthCameraModule(is_decimate=False, visualize=False)
     #rokoko = RokokoModule(VR_HOST, HAND_INFO_PORT, ROKOKO_PORT)
     if args.handedness == "right":
-        quest = QuestRightArmLeapModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=None)
+        raise NotImplementedError   # There is no right arm leap hand module without rokoko yet.
+        # quest = QuestRightArmLeapModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=None)
     else:
         quest = QuestLeftArmGripperNoRokokoModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=vis_sp)
+
+    quest.data_dir = f"{quest.data_dir}/{args.exp_name}"
+    os.makedirs(quest.data_dir, exist_ok=True)
 
     start_time = time.time()
     fps_counter = 0
@@ -60,6 +66,8 @@ if __name__ == "__main__":
                 arm_q, hand_q, wrist_pos, wrist_orn = quest.solve_system_world(wrist_pos, wrist_orn, hand_tip_pose)
                 action = quest.send_ik_result(arm_q, hand_q)
                 if quest.data_dir is not None:
+                    # Make sure the data_dir exists
+                    os.makedirs(quest.data_dir, exist_ok=True)
                     if args.no_camera:
                         point_cloud = np.zeros((1000,3)) # dummy point cloud
                     if args.handedness == "right":

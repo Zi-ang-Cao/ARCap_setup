@@ -229,6 +229,8 @@ else:
 
 for j, root_path in enumerate(args.root_path):
     print("Processing root path:", root_path)
+    # Create data folder if not exists
+    os.makedirs(f"data_processed/{root_path}", exist_ok=True)
     folders = os.listdir(f"data/{root_path}")
     folders.remove("WorldFrame.npy")
     folders.sort()
